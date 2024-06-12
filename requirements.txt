@@ -1,5 +1,5 @@
 streamlit==1.22.0
 streamlit-option-menu
 seaborn
-sklearn
+scikit-learn
 matplotlib
