@@ -15,7 +15,27 @@ data_path = ''
 df = pd.read_csv(data_path + 'netflix_titles.csv')
 new_df = pd.read_csv(data_path + 'netflix_titles_no_missing_values.csv')
 
-options = ['설명', '(1) 결측치 제거', '(2) 시각화', '(3) 관련 콘텐츠 추천', '(4) 콘텐츠 추천 앱']
+alphabet_titles = {chr(i): new_df[new_df['title'].str.startswith(chr(i))]['title'].tolist() for i in range(65, 91)}
+
+# 세션 상태 초기화
+if 'selected_alphabet_1' not in st.session_state:
+    st.session_state['selected_alphabet_1'] = 'A'
+if 'movie_title_list_1' not in st.session_state:
+    st.session_state['movie_title_list_1'] = alphabet_titles[st.session_state['selected_alphabet_1']]
+
+if 'selected_alphabet_2' not in st.session_state:
+    st.session_state['selected_alphabet_2'] = 'A'
+if 'movie_title_list_2' not in st.session_state:
+    st.session_state['movie_title_list_2'] = alphabet_titles[st.session_state['selected_alphabet_2']]
+
+def update_movie_list_1():
+    st.session_state['movie_title_list_1'] = alphabet_titles[st.session_state['selected_alphabet_1']]
+
+def update_movie_list_2():
+    st.session_state['movie_title_list_2'] = alphabet_titles[st.session_state['selected_alphabet_2']]
+
+
+options = ['설명', '(1) 결측치 제거', '(2) 시각화', '(3) 영화 기반 추천', '(4) 취향 기반 추천']
 
 with st.sidebar:
     menu = option_menu(
@@ -29,7 +49,7 @@ with st.sidebar:
                          'text-align': 'left', 'margin': '0px',
                          '--hover-color': 'LightPink'},
             'nav-link-selected': {'background-color': 'HotPink'}
-        },
+        }
     )
 
 i = options.index(menu)
@@ -428,7 +448,7 @@ elif i==2:
 
 elif i == 3:
     st.subheader('(3) description의 코사인 유사도 기반 관련 콘텐츠 추천')
-    st.markdown('- 본격적으로 type, country, duration을 반영한 추천시스템을 제작하기 전, desciption의 코사인 유사도만으로 콘텐츠를 추천하는 과정이다.')
+    st.markdown('- 본격적으로 type, country, duration을 반영한 추천시스템을 제작하기 전, description의 코사인 유사도만으로 콘텐츠를 추천하는 과정이다.')
 
     # TF-IDF 벡터화
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -465,9 +485,11 @@ elif i == 3:
         # 유사한 영화들의 제목 리턴
         return df['title'].iloc[movie_indices]
 
+    # 알파벳 선택 및 영화 목록 업데이트
+    selected_alphabet = st.selectbox('Select the first letter of the movie title:', list(alphabet_titles.keys()), key='selected_alphabet_1', on_change=update_movie_list_1)
+    movie_title = st.selectbox('Select a movie title:', st.session_state['movie_title_list_1'])
 
     with st.form(key='movie_form'):
-        movie_title = st.text_input('Enter a movie title you have watched:')
         submit_button = st.form_submit_button(label='Recommend')
 
     # 추천 결과 처리
@@ -481,11 +503,22 @@ elif i == 3:
                 for i, title in enumerate(recommendations, 1):
                     st.write(f"{i}. {title}")
         else:
-            st.write('Please enter a movie title.')
+            st.write('Please select a movie title.')
 
-elif i== 4:
 
+elif i == 4:
     st.title('개인 맞춤 콘텐츠 추천 앱')
+
+    # 데이터 초기화 버튼
+    if st.button('Reset Data'):
+        st.session_state['user_data'] = pd.DataFrame(
+            columns=['title', 'rating', 'evaluation_date', 'description', 'country', 'duration', 'type'])
+        st.success("Data has been reset.")
+
+    # 알파벳 선택 및 영화 목록 업데이트
+    selected_alphabet = st.selectbox('Select the first letter of the movie title:', list(alphabet_titles.keys()),
+                                     key='selected_alphabet_2', on_change=update_movie_list_2)
+    movie_title = st.selectbox('Select a movie title:', st.session_state['movie_title_list_2'])
 
     # TF-IDF 벡터화
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -497,12 +530,10 @@ elif i== 4:
     # 영화 제목을 인덱스로 매핑
     indices = pd.Series(df.index, index=df['title']).drop_duplicates()
 
-
     def penalty(evaluation_date):
         current_date = datetime.now()
         days_passed = (current_date - evaluation_date).days
         return 1 / (1 + np.log1p(days_passed))
-
 
     def get_recommendations(title, cosine_sim=cosine_sim):
         if title not in indices:
@@ -513,7 +544,6 @@ elif i== 4:
         sim_scores = sim_scores[1:11]
         movie_indices = [i[0] for i in sim_scores]
         return df['title'].iloc[movie_indices].tolist()
-
 
     def get_top_similar_movies(movie_title, user_rating, eval_date, top_n=10):
         date_penalty = penalty(eval_date)
@@ -526,7 +556,6 @@ elif i== 4:
             recommendations.append((title, adjusted_score))
         return recommendations
 
-
     def create_preference_matrix(user_data):
         country_pref = user_data.groupby('country').apply(
             lambda x: (x['rating'] * x['evaluation_date'].apply(penalty)).sum()).to_dict()
@@ -536,7 +565,6 @@ elif i== 4:
             lambda x: (x['rating'] * x['evaluation_date'].apply(penalty)).sum()).to_dict()
         return country_pref, duration_pref, type_pref
 
-
     def calculate_inner_product(row, country_pref, duration_pref, type_pref):
         countries = str(row['country']).split(', ')
         country_scores = [country_pref.get(country, 0) for country in countries]
@@ -544,51 +572,37 @@ elif i== 4:
         type_score = type_pref.get(row['type'], 0)
         return sum(country_scores) + duration_score + type_score
 
-
     # 사용자가 본 영화 목록을 저장할 데이터프레임 초기화
     if 'user_data' not in st.session_state:
         st.session_state['user_data'] = pd.DataFrame(
             columns=['title', 'rating', 'evaluation_date', 'description', 'country', 'duration', 'type'])
 
-    # 데이터 초기화 버튼
-    if st.button('Reset Data'):
-        st.session_state['user_data'] = pd.DataFrame(
-            columns=['title', 'rating', 'evaluation_date', 'description', 'country', 'duration', 'type'])
-        st.success("Data has been reset.")
+
 
     # 입력 폼 설정
     with st.form(key='movie_form'):
-        movie_title = st.text_input('Enter a movie title you have watched:')
         movie_rating = st.select_slider('Rate the movie:', options=list(range(1, 11)), value=5)
         evaluation_date = st.date_input('Evaluation date:', datetime.now(), max_value=datetime.now().date())
         submit_button = st.form_submit_button(label='Add')
 
     # 입력 폼 제출 처리
     if submit_button:
-        # 입력된 영화 제목을 소문자로 변환
-        normalized_movie_title = movie_title.lower()
+        # df 데이터프레임에서 해당 영화 제목 가져오기
+        movie_info = df[df['title'] == movie_title].iloc[0]
+        new_data = pd.DataFrame({
+            'title': [movie_info['title']],
+            'rating': [movie_rating],
+            'evaluation_date': [pd.to_datetime(evaluation_date)],
+            'description': [movie_info['description']],
+            'country': [movie_info['country']],
+            'duration': [movie_info['duration']],
+            'type': [movie_info['type']]
+        })
 
-        # 대소문자 구분 없이 입력된 영화 제목과 데이터프레임에 있는 영화 제목을 비교
-        if normalized_movie_title not in df['title'].str.lower().values:
-            st.error(f"The movie '{movie_title}' is not in the dataset.")
-        else:
-            # df 데이터프레임에서 해당 영화 제목 가져오기
-            movie_info = df[df['title'].str.lower() == normalized_movie_title].iloc[0]
-            # 사용자 데이터프레임에 등록할 때는 대소문자를 그대로 사용
-            new_data = pd.DataFrame({
-                'title': [movie_info['title']],  # 대소문자 그대로 사용
-                'rating': [movie_rating],
-                'evaluation_date': [pd.to_datetime(evaluation_date)],
-                'description': [movie_info['description']],
-                'country': [movie_info['country']],
-                'duration': [movie_info['duration']],
-                'type': [movie_info['type']]
-            })
-
-            # 이미 평가된 영화 제목인 경우 기존 데이터 덮어쓰기
-            st.session_state['user_data'] = st.session_state['user_data'][
-                st.session_state['user_data']['title'].str.lower() != normalized_movie_title]
-            st.session_state['user_data'] = pd.concat([st.session_state['user_data'], new_data], ignore_index=True)
+        # 이미 평가된 영화 제목인 경우 기존 데이터 덮어쓰기
+        st.session_state['user_data'] = st.session_state['user_data'][
+            st.session_state['user_data']['title'] != movie_title]
+        st.session_state['user_data'] = pd.concat([st.session_state['user_data'], new_data], ignore_index=True)
 
     # 현재 사용자 데이터 출력
     st.write('Your movie ratings:')
