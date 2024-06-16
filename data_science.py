@@ -113,18 +113,20 @@ if i == 1:
     st.code("df.loc[df['director'] == 'Louis C.K.', 'rating'] = 'Unknown'")
 
     st.markdown('- rating의 결측치 제거')
-    st.code('''
-    df['rating'] = df['rating'].fillna('Unknown')
-    df['rating'].isnull().value_counts()
-    ''')
-    df['rating'] = df['rating'].fillna('Unknown')
+    with st.expander("코드 보기"):
+        st.code('''
+        df['rating'] = df['rating'].fillna('Unknown')
+        df['rating'].isnull().value_counts()
+        ''')
+        df['rating'] = df['rating'].fillna('Unknown')
 
     st.markdown('- country의 결측치 제거')
-    st.code('''
-    df['country'] = df['country'].fillna('Unknown')
-    df['country'].isnull().value_counts()
-    ''')
-    df['country'] = df['country'].fillna('Unknown')
+    with st.expander("코드 보기"):
+        st.code('''
+        df['country'] = df['country'].fillna('Unknown')
+        df['country'].isnull().value_counts()
+        ''')
+        df['country'] = df['country'].fillna('Unknown')
 
 elif i==2:
     st.subheader('(2) 칼럼별 데이터 시각화')
@@ -138,12 +140,13 @@ elif i==2:
 
     st.markdown('- country / 제작 국가')
     st.markdown('1. 하나의 데이터에 여러 개의 국가가 할당된 경우가 있으므로 이를 분리해줍니다.')
-    st.code('''
-    country_list = new_df['country'].str.split(', ')
-    country_df = country_list.explode()
-    country_counts = country_df.value_counts()
-    country_counts
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+        country_list = new_df['country'].str.split(', ')
+        country_df = country_list.explode()
+        country_counts = country_df.value_counts()
+        country_counts
+        ''')
     country_list = new_df['country'].str.split(', ')
     st.text(country_list)
     country_df = country_list.explode()
@@ -151,16 +154,17 @@ elif i==2:
     st.text(country_counts)
 
     st.markdown("2. 국가의 개수가 128개로 너무 많기 때문에, 2% 미만의 비중을 차지하는 국가의 경우 '기타(Other)' 항목으로 합쳐줍니다.")
-    st.code('''
-    total_count = country_counts.sum()
-    threshold = total_count * 0.02
-    # 임계값보다 작으면 기타 항목(Other)으로 분류
-    other_countries = country_counts[country_counts < threshold]
-    main_countries = country_counts[country_counts >= threshold]
-    
-    other_count = other_countries.sum()
-    main_countries['Other'] = other_count
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+        total_count = country_counts.sum()
+        threshold = total_count * 0.02
+        # 임계값보다 작으면 기타 항목(Other)으로 분류
+        other_countries = country_counts[country_counts < threshold]
+        main_countries = country_counts[country_counts >= threshold]
+        
+        other_count = other_countries.sum()
+        main_countries['Other'] = other_count
+        ''')
     total_count = country_counts.sum()
     threshold = total_count * 0.02
     # 임계값보다 작으면 기타 항목(Other)으로 분류
@@ -183,26 +187,27 @@ elif i==2:
 
     st.markdown('  '
                 '4. 기타 항목(Other)을 포함해 country를 다시 라벨링해줍니다.')
-    st.code('''
-        # 주어진 국가 목록과 'Other'로 라벨링할 기준 목록 정의
-    countries = [
-        'United States', 'India', 'None', 'United Kingdom', 'Canada',
-        'France', 'Japan', 'Spain', 'South Korea', 'Germany'
-    ]
-    
-    # country 열 수정 함수 정의
-    def label_country(country):
-        if country in countries:
-            return country
-        else:
-            return 'Other'
-    
-    # country 열에 함수 적용
-    new_df['country'] = new_df['country'].apply(label_country)
-    
-    # 수정된 데이터프레임 출력
-    new_df
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+            # 주어진 국가 목록과 'Other'로 라벨링할 기준 목록 정의
+        countries = [
+            'United States', 'India', 'None', 'United Kingdom', 'Canada',
+            'France', 'Japan', 'Spain', 'South Korea', 'Germany'
+        ]
+        
+        # country 열 수정 함수 정의
+        def label_country(country):
+            if country in countries:
+                return country
+            else:
+                return 'Other'
+        
+        # country 열에 함수 적용
+        new_df['country'] = new_df['country'].apply(label_country)
+        
+        # 수정된 데이터프레임 출력
+        new_df
+        ''')
     # 주어진 국가 목록과 'Other'로 라벨링할 기준 목록 정의
     countries = [
         'United States', 'India', 'None', 'United Kingdom', 'Canada',
@@ -226,36 +231,38 @@ elif i==2:
 
     st.markdown('- duration / 영상 매체 길이(시간(분) or 시즌 개수)')
     st.markdown('1. duration의 종류 확인')
-    st.code('''
-    pd.set_option('display.max_seq_items', None)
-    df['duration'].value_counts().index.sort_values()
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+        pd.set_option('display.max_seq_items', None)
+        df['duration'].value_counts().index.sort_values()
+        ''')
     pd.set_option('display.max_seq_items', None)
     st.text(df['duration'].value_counts().index.sort_values())
 
     st.markdown('2. 시리즈물 / 시리즈물이 아닌 것의 비율 구한 뒤 시각화')
-    st.code('''
-    min_count = df['duration'].str.endswith('min').sum()
-    season_count = df['duration'].str.endswith(('Season', 'Seasons')).sum()
-    ''')
-    st.code('''
-    total_count = len(df)
-    min_ratio = min_count / total_count
-    season_ratio = season_count / total_count
-    ''')
-    st.code('''
-    # 시리즈물 / 시리즈물이 아닌 것의 비율그래프
-    labels = ['min', 'Season']
-    ratios = [min_ratio, season_ratio]
-    
-    plt.figure(figsize=(8, 6))
-    plt.bar(labels, ratios)
-    plt.xlabel('Duration Type')
-    plt.ylabel('Ratio')
-    plt.title('Ratio of "min" and "Season" in Duration')
-    plt.ylim(0, 1)
-    plt.show()
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+        min_count = df['duration'].str.endswith('min').sum()
+        season_count = df['duration'].str.endswith(('Season', 'Seasons')).sum()
+        ''')
+        st.code('''
+        total_count = len(df)
+        min_ratio = min_count / total_count
+        season_ratio = season_count / total_count
+        ''')
+        st.code('''
+        # 시리즈물 / 시리즈물이 아닌 것의 비율그래프
+        labels = ['min', 'Season']
+        ratios = [min_ratio, season_ratio]
+        
+        plt.figure(figsize=(8, 6))
+        plt.bar(labels, ratios)
+        plt.xlabel('Duration Type')
+        plt.ylabel('Ratio')
+        plt.title('Ratio of "min" and "Season" in Duration')
+        plt.ylim(0, 1)
+        plt.show()
+        ''')
     min_count = df['duration'].str.endswith('min').sum()
     season_count = df['duration'].str.endswith(('Season', 'Seasons')).sum()
     total_count = len(df)
@@ -277,28 +284,29 @@ elif i==2:
     st.pyplot(fig)
 
     st.markdown('3. 시리즈물의 시리즈 개수별 통계')
-    st.code('''
-    season_data = new_df[new_df['duration'].str.endswith(('Season', 'Seasons'))]
-    ''')
-    st.code('''
-    season_counts = season_data['duration'].value_counts().reset_index()
-    
-    season_counts['category'] = season_counts['duration'].apply(
-        lambda x: x if int(x.split()[0]) < 4 else '4 Seasons and above'
-    )
-    combined_counts = season_counts.groupby('category')['count'].sum().reset_index()
-    combined_counts
-    ''')
-    st.code('''
-    # 시리즈물의 시즌 개수별 막대그래프
-    plt.figure(figsize=(10, 6))
-    plt.bar(combined_counts['category'], combined_counts['count'], color='skyblue')
-    plt.xlabel('Duration')
-    plt.ylabel('Count')
-    plt.title('Number of Seasons')
-    plt.xticks(rotation=45)
-    plt.show()
-    ''')
+    with st.expander("코드 보기"):
+        st.code('''
+        season_data = new_df[new_df['duration'].str.endswith(('Season', 'Seasons'))]
+        ''')
+        st.code('''
+        season_counts = season_data['duration'].value_counts().reset_index()
+        
+        season_counts['category'] = season_counts['duration'].apply(
+            lambda x: x if int(x.split()[0]) < 4 else '4 Seasons and above'
+        )
+        combined_counts = season_counts.groupby('category')['count'].sum().reset_index()
+        combined_counts
+        ''')
+        st.code('''
+        # 시리즈물의 시즌 개수별 막대그래프
+        plt.figure(figsize=(10, 6))
+        plt.bar(combined_counts['category'], combined_counts['count'], color='skyblue')
+        plt.xlabel('Duration')
+        plt.ylabel('Count')
+        plt.title('Number of Seasons')
+        plt.xticks(rotation=45)
+        plt.show()
+        ''')
 
     season_data = new_df[new_df['duration'].str.endswith(('Season', 'Seasons'))]
     season_counts = season_data['duration'].value_counts().reset_index()
@@ -326,34 +334,35 @@ elif i==2:
     ** mid-term(60분 이상 120분 미만)  
     ** long-term(120분 이상)     
     ''')
-    st.code('''
-    def categorize_minutes(minutes):
-      if minutes < 60:
-        return 'short-term'
-      elif 60 <= minutes < 120:
-        return 'mid-term'
-      else:
-        return 'long-term'
-    ''')
-    st.code('''
-    # 시리즈물이 아닌 것의 상영 길이별 통계
-
-    min_data = df[df['duration'].str.endswith(('min'))].copy()
-    min_data.loc[:, 'minutes'] = min_data['duration'].str.extract('(\d+)').astype(int)
+    with st.expander("코드 보기"):
+        st.code('''
+        def categorize_minutes(minutes):
+          if minutes < 60:
+            return 'short-term'
+          elif 60 <= minutes < 120:
+            return 'mid-term'
+          else:
+            return 'long-term'
+        ''')
+        st.code('''
+        # 시리즈물이 아닌 것의 상영 길이별 통계
     
-    min_data.loc[:, 'category'] = min_data['minutes'].apply(categorize_minutes)
-    
-    category_counts = min_data['category'].value_counts().reset_index()
-    category_counts.columns = ['category', 'count']
-    
-    plt.figure(figsize=(10, 6))
-    plt.bar(category_counts['category'], category_counts['count'], color='skyblue')
-    plt.xlabel('Duration Category')
-    plt.ylabel('Count')
-    plt.title('Number of Entries per Duration Category')
-    plt.xticks(rotation=45)
-    plt.show()
-    ''')
+        min_data = df[df['duration'].str.endswith(('min'))].copy()
+        min_data.loc[:, 'minutes'] = min_data['duration'].str.extract('(\d+)').astype(int)
+        
+        min_data.loc[:, 'category'] = min_data['minutes'].apply(categorize_minutes)
+        
+        category_counts = min_data['category'].value_counts().reset_index()
+        category_counts.columns = ['category', 'count']
+        
+        plt.figure(figsize=(10, 6))
+        plt.bar(category_counts['category'], category_counts['count'], color='skyblue')
+        plt.xlabel('Duration Category')
+        plt.ylabel('Count')
+        plt.title('Number of Entries per Duration Category')
+        plt.xticks(rotation=45)
+        plt.show()
+        ''')
 
     def categorize_minutes(minutes):
         if minutes < 60:
@@ -384,36 +393,37 @@ elif i==2:
     st.pyplot(fig)
 
     st.markdown('5. df의 duration열을 다시 라벨링')
-    st.code('''
-    # duration 열 수정 함수 정의
-    def label_duration(duration):
-        if duration.endswith('min'):
-            minutes = int(duration.split()[0])
-            if minutes < 60:
-                return 'short-term'
-            elif 60 <= minutes < 120:
-                return 'mid-term'
+    with st.expander("코드 보기"):
+        st.code('''
+        # duration 열 수정 함수 정의
+        def label_duration(duration):
+            if duration.endswith('min'):
+                minutes = int(duration.split()[0])
+                if minutes < 60:
+                    return 'short-term'
+                elif 60 <= minutes < 120:
+                    return 'mid-term'
+                else:
+                    return 'long-term'
+            elif duration.endswith('Season') or duration.endswith('Seasons'):
+                seasons = int(duration.split()[0])
+                if seasons == 1:
+                    return '1 Season'
+                elif seasons == 2:
+                    return '2 Seasons'
+                elif seasons == 3:
+                    return '3 Seasons'
+                else:
+                    return '4 Seasons and above'
             else:
-                return 'long-term'
-        elif duration.endswith('Season') or duration.endswith('Seasons'):
-            seasons = int(duration.split()[0])
-            if seasons == 1:
-                return '1 Season'
-            elif seasons == 2:
-                return '2 Seasons'
-            elif seasons == 3:
-                return '3 Seasons'
-            else:
-                return '4 Seasons and above'
-        else:
-            return duration  # 원본 데이터를 반환 (조건에 맞지 않는 경우)
-    
-    # duration 열에 함수 적용
-    df['duration'] = df['duration'].apply(label_duration)
-    
-    # 수정된 데이터프레임 출력
-    df
-    ''')
+                return duration  # 원본 데이터를 반환 (조건에 맞지 않는 경우)
+        
+        # duration 열에 함수 적용
+        df['duration'] = df['duration'].apply(label_duration)
+        
+        # 수정된 데이터프레임 출력
+        df
+        ''')
 
 
     # duration 열 수정 함수 정의
@@ -448,7 +458,7 @@ elif i==2:
 
 elif i == 3:
     st.subheader('(3) description의 코사인 유사도 기반 관련 콘텐츠 추천')
-    st.markdown('- 본격적으로 type, country, duration을 반영한 추천시스템을 제작하기 전, description의 코사인 유사도만으로 콘텐츠를 추천하는 과정이다.')
+    st.markdown('- 선택한 콘텐츠 제목을 바탕으로, 관련 있는 줄거리를 가진 다른 콘텐츠를 추천합니다. 줄거리 유사도만 추천에 이용되며, 다른 정보는 반영하지 않습니다.')
 
     # TF-IDF 벡터화
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
@@ -508,6 +518,7 @@ elif i == 3:
 
 elif i == 4:
     st.title('개인 맞춤 콘텐츠 추천 앱')
+    st.markdown('- 사용자의 콘텐츠 제작 국가, 콘텐츠 길이, 콘텐츠 종류 선호도를 반영하여 지금까지 본 콘텐츠와 관련된 다른 콘텐츠를 추천합니다. 평가 날짜가 오래되었을수록 반영 비율이 적습니다')
 
     # 데이터 초기화 버튼
     if st.button('Reset Data'):
@@ -637,5 +648,6 @@ elif i == 4:
 
         # Final top 5 recommendations 출력
         st.write('Final top 5 recommendations based on your preferences:')
+        st.write('괄호 안의 점수는 사용자 취향 유사 점수(국가, 길이, 종류)를 나타냅니다. 따라서 줄거리가 비슷한 콘텐츠를 추천하지만 점수가 0으로 나타날 수도 있습니다.')
         for i, row in enumerate(final_recommendations.itertuples(), 1):
             st.write(f"{i}. {row.title} (Score: {row.score:.2f})")
